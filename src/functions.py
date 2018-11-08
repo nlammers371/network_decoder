@@ -83,35 +83,35 @@ def log_L_fluo(fluo, v, state, noise):
     return logL
 """
 # forward filtering pass
-def fwd_algorithm(init_vec, A_log, E_log, pi0_log):
+def fwd_algorithm(init_vec, a_log, e_log, pi0_log):
     """
     :param init_vec: a single time series of initiation event counts
-    :param A_log: current estimate of transition probability matrix (KxK)
-    :param E_log: current estimate of initiation probability matrix (KxK)
+    :param a_log: current estimate of transition probability matrix (KxK)
+    :param e_log: current estimate of initiation probability matrix (KxK)
     :param pi0_log: initial state PDF (Kx1)
     :return: K x T vector of  log probabilities
     """
-    K = len(A_log[0.:])
+    K = len(a_log[0.:])
     T = len(init_vec)
     # Allocate alpha array to store log probs
     alpha_array = np.zeros((K, T), dtype=float) - np.Inf
     # Iterate through time points
-    prev = np.tile(pi0_log, (1, K))
+    prev = np.transpose(np.tile(pi0_log, (1, K)))
     for t in range(0, T):
-        alpha_array[:, t] = logsumexp(A_log + prev,axis=1) + E_log[init_vec[t]]
-        prev = np.tile(alpha_array[:, t], (1, K))
+        alpha_array[:, t] = logsumexp(a_log + prev, axis=1) + e_log[init_vec[t]]
+        prev = np.transpose(np.tile(alpha_array[:, t], (1, K)))
     return alpha_array
 
 
-def bkwd_algorithm(init_vec, A_log, E_log, pi0_log):
+def bkwd_algorithm(init_vec, a_log, e_log, pi0_log):
     """
     :param init_vec: a single time series of initiation event counts
-    :param A_log: current estimate of transition probability matrix (KxK)
-    :param E_log: current estimate of initiation probability matrix (KxK)
+    :param a_log: current estimate of transition probability matrix (KxK)
+    :param e_log: current estimate of initiation probability matrix (KxK)
     :param pi0_log: initial state PDF (Kx1)
     :return: K x T vector of  log probabilities
     """
-    K = len(A_log[0.:])
+    K = len(a_log[0.:])
     T = len(init_vec)
     # Allocate alpha array to store log probs
     beta_array = np.zeros((K, T), dtype=float) - np.Inf
@@ -121,34 +121,30 @@ def bkwd_algorithm(init_vec, A_log, E_log, pi0_log):
     steps = np.arange(T-1)
     steps = steps[::-1]
     for t in steps:
-        post = beta_array[:, t + 1]
-        for k in range(K):
-            # get logL of transitions into state k from each of the previous states
-            b_sums = [A_log[l, k] + post[l] + log_L_fluo(fluo_vec[t+1],v,l,noise) for l in xrange(K)]
-            # scipy has a built in function for handling logsums
-            beta_array[k, t] = logsumexp(b_sums)
-        if t == 0:
-            close_probs = [beta_array[l,0] + pi0_log[l] + log_L_fluo(fluo_vec[t],v,l,noise) for l in xrange(K)]
+        post = beta_array[:, t+1] + np.transpose(e_log[init_vec[t+1], :])
+        b_sums = np.tile(post, (1, K)) + a_log
+        beta_array[:, t] = logsumexp(b_sums, axis=0)
+
+    close_probs = [beta_array[l, 0] + pi0_log[l] + e_log[init_vec[0], l] for l in range(K)]
     return beta_array, logsumexp(close_probs)
 
 #Function to calculate likelhood of data given estimated parameters
-def log_likelihood(fluo, A_log, v, noise, pi0_log, alpha, beta):
+def log_likelihood(init_vec, a_log, e_log, pi0_log, alpha, beta):
     """
 
-    :param fluo: List of fluo time series
-    :param A_log: Log of transition matrix
-    :param v: Emission States
-    :param noise: Noise (stddev of signal)
+    :param init_vec: Time series of initiation event counts (1xT)
+    :param a_log: Log of transition probability matrix
+    :param e_log: current estimate of initiation probability matrix (KxK)
     :param pi0_log: Log of initial state PDF
     :param alpha: Forward matrix
     :param beta: Backward matrix
     :return: Log Probability
     """
     l_score = 0
-    K = len(v)
+    K = len(a_log[0.:])
     for f, fluo_vec in enumerate(fluo):
         # Get log likelihood of sequence
-        p_x = logsumexp(alpha[f][:,-1])
+        p_x = logsumexp(alpha[f][:, -1])
         for t in xrange(len(fluo_vec)):
             for k in xrange(K):
                 #Likelihood of observing F(t)
@@ -161,7 +157,7 @@ def log_likelihood(fluo, A_log, v, noise, pi0_log, alpha, beta):
                 #Likelihood of transition TO l FROM k
                 for k in xrange(K):
                     for l in xrange(K):
-                        l_score += math.exp(alpha[f][l,t] + beta[f][l,t] + alpha[f][k,t-1] + beta[f][k,t-1] - p_x) * A_log[l,k]
+                        l_score += math.exp(alpha[f][l,t] + beta[f][l,t] + alpha[f][k,t-1] + beta[f][k,t-1] - p_x) * a_log[l,k]
 
     return l_score
 
