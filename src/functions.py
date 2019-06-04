@@ -14,63 +14,6 @@ from scipy.stats import multinomial
 from sklearn.preprocessing import normalize
 
 
-def simulate_traces(tau,dT,memory,trace_len,A,e,r,sigma,alpha):
-    """
-
-    :param tau: Inherent time scale of the sytem (seconds)
-    :param dT:  Time resolution of experimental observations (seconds)
-    :param memory: Dwell time on gene for Pol II molecules (units of tau)
-    :param trace_len: Length of simulated trace (in units of dT)
-    :param A: Transition probability matrix (KxK, where K is number of states)
-    :param e: Emission probability matrix (always 3xK)
-    :param r: Calibration term (AU/Pol II)
-    :param sigma: Scale of Gaussian experimental noise
-    :param alpha: MS2 rise time (in units of tau)
-    :return:
-    """
-    # generate convolution kernel to deal with MS2 rise time
-    if alpha > 0:
-        alpha_vec = [(float(i + 1) / alpha + (float(i) / alpha)) / 2.0 * (i < alpha) * ((i + 1) <= alpha)
-                     + ((alpha - i)*(1 + float(i) / alpha) / 2.0 + i + 1 - alpha) * (i < alpha) * (i + 1 > alpha)
-                     + 1 * (i >= alpha) for i in range(memory)]
-
-        #alpha_vec = np.array(alpha_vec[::-1])
-    else:
-        alpha_vec = np.array([1.0]*memory)
-    # use this one to generate "realistic traces"
-    kernel = np.ones(memory)*alpha_vec
-    # generates traces assuming zero MS2 rise time--primarily as a  check
-    kernel_unif = np.ones(memory)
-    cv_factor = int(dT/tau) # cconversion factor giving number system steps per obs step
-    # initialize lists and useful params
-    K = A.shape[0]
-    # track promoter states
-    system_states = np.empty((trace_len*cv_factor), dtype='int')
-    # track promoter initiation states
-    initiation_states = np.empty((trace_len*cv_factor))
-    # draw first system state
-    system_states[0] = np.random.choice(K)
-    # draw initiation state conditional on system state
-    initiation_states[0] = np.random.choice(K, 1, p=e[:, system_states[0]])
-
-    for i in range(1, trace_len*cv_factor):
-        # time step
-        system_states[i] = np.random.choice(K, 1, p=A[:, system_states[i-1]])
-        initiation_states[i] = np.random.choice(K, 1, p=e[:, system_states[i]])
-
-
-    # convolve to get fluo
-    fluo_raw = np.convolve(kernel, initiation_states, mode='full')
-    fluo_raw = fluo_raw[0:trace_len*cv_factor]*r
-    fluo_unif = np.convolve(kernel_unif, initiation_states, mode='full')
-    fluo_unif = fluo_unif[0:trace_len*cv_factor]*r
-
-    # add noise
-    noise_vec = np.random.randn(trace_len*cv_factor) * sigma
-    fluo_noise = fluo_raw + noise_vec
-
-    # output
-    return fluo_noise, fluo_raw, fluo_unif, system_states, initiation_states
 
 """
 #Helper function to calculate log likelihood of a proposed state
@@ -277,9 +220,9 @@ def init_mcmc(init_data, a_prior, e_prior, pi0_prior, n_steps=1000, burn_in=100)
 
     # calculate initial model probability
     total_prob, alpha_list = log_prob_init(init_data, a_init, e_init, pi0_init,
-                                                a_prior, e_prior, pi0_prior)
+                                            a_prior, e_prior, pi0_prior)
 
-    # Calculate backwrad probabilities for each sequence
+    # Calculate backward probabilities for each sequence
     beta_list = []
     for t, init_vec in enumerate(init_data):
         beta_array, cp = bkwd_algorithm(init_vec, np.log(a_init), np.log(e_init), np.log(pi0_init))
@@ -305,6 +248,7 @@ def init_mcmc(init_data, a_prior, e_prior, pi0_prior, n_steps=1000, burn_in=100)
         e_log_empirical = emission_count_list[sample - 1]
         pi0_log_empirical = init_count_list[sample - 1]
 
+        # Initialize empty emission and transition matrices
         a_current = np.empty_like(a_prior)
         e_current = np.empty_like(e_prior)
 
@@ -323,8 +267,7 @@ def init_mcmc(init_data, a_prior, e_prior, pi0_prior, n_steps=1000, burn_in=100)
             a_current[:, k] = dirichlet.rvs(a_parameters[:, k])
 
         # Calculate current probability
-        prob_curr, alpha_list = log_prob_init(init_data, a_current, e_current, pi0_current, a_prior, e_prior,
-                                             pi0_prior)
+        prob_curr, alpha_list = log_prob_init(init_data, a_current, e_current, pi0_current, a_prior, e_prior, pi0_prior)
 
         # Filter sequence using fwd-bkwd algorithm to obtain  step-by-step state probabilities
         beta_list = []
@@ -336,7 +279,6 @@ def init_mcmc(init_data, a_prior, e_prior, pi0_prior, n_steps=1000, burn_in=100)
 
         a_log_empirical, e_log_empirical, pi0_log_empirical, seq_log_probs, full_seq_probs = \
             empirical_counts(np.log(a_current), np.log(e_current), np.log(pi0_current), init_data, alpha_list, beta_list)
-
         # record updates
         e_array_list.append(e_current)
         a_array_list.append(a_current)
@@ -347,9 +289,11 @@ def init_mcmc(init_data, a_prior, e_prior, pi0_prior, n_steps=1000, burn_in=100)
         init_count_list.append(pi0_log_empirical)
         logL_list.append(prob_curr)
 
-        print('step:')
-        print(sample)
-        print(prob_curr)
+
+         #   print('step:')
+         #   print(sample)
+         #   print(prob_curr)
+
     return logL_list, e_array_list, a_array_list, pi0_array_list
 
 if __name__ == "__main__":
@@ -359,7 +303,7 @@ if __name__ == "__main__":
     tau = 2
     cv_factor = int(dT/tau)
     # Fix trace length for now
-    trace_len = 500
+    trace_len = 2000
     # Number of traces per batch
     sigma = 20
     r = 20
@@ -381,7 +325,7 @@ if __name__ == "__main__":
         = simulate_traces(tau, dT, memory, trace_len, A, e, r, sigma, alpha)
 
     start = timeit.default_timer()
-    n_steps = 200
+    n_steps = 100
     logL_list, e_array_list, a_array_list, pi0_array_list = \
         init_mcmc([initiation_states], a_prior, e_prior, pi0_prior, n_steps=n_steps, burn_in=1)
     stop = timeit.default_timer()
