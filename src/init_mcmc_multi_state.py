@@ -133,7 +133,7 @@ def empirical_counts(a_log, e_log, pi0_log, init_data, alpha_list, beta_list):
     :param init_data: List of lists. Each item is a time series of initiation events
     :param alpha_list: List of lists. Each element is array of fwd probabilities
     :param beta_list: List of lists. Each element is array of bkwd probabilities
-    :return: empirical counts for transition events, initiation events, first state PDF.
+    :return: empirical counts for transition events, initiation events, first state PD
             list of marginal hidden state probabilities, list of total sequence probabilities
     """
     # Calculate total marginal probability for each z_it

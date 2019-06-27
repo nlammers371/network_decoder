@@ -2,12 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8cbb5bdf-2577-4a41-87db-b8ced53755da" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/src/traceDecoderTesting.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/trace_simulators.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/init_mcmc_two_state.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/functions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/easy-install.pth" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/easy-install.pth" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/venv/pip-selfcheck.json" beforeDir="false" afterPath="$PROJECT_DIR$/venv/pip-selfcheck.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/.ipynb_checkpoints/traceDecoderTesting-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/src/.ipynb_checkpoints/traceDecoderTesting-checkpoint.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/init_mcmc_multi_state.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/traceDecoderTesting.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/src/traceDecoderTesting.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/trace_simulators.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/trace_simulators.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -21,10 +21,22 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/functions.py">
+        <entry file="file://$PROJECT_DIR$/src/init_mcmc_multi_state.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="170">
-              <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
+            <state>
+              <caret line="32" selection-start-line="32" selection-end-line="32" />
+              <folding>
+                <element signature="e#0#13#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/trace_simulators.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1600">
+              <caret line="80" column="55" lean-forward="true" selection-start-line="80" selection-start-column="55" selection-end-line="80" selection-end-column="55" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
@@ -33,10 +45,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/trace_simulators.py">
+        <entry file="file://$PROJECT_DIR$/src/init_mcmc_two_state.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="34">
-              <caret line="72" lean-forward="true" selection-start-line="72" selection-end-line="72" />
+            <state relative-caret-position="395">
+              <caret line="260" column="34" lean-forward="true" selection-start-line="260" selection-start-column="34" selection-end-line="260" selection-end-column="34" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
@@ -67,6 +79,13 @@
       <find>e_curr_prob</find>
       <find>a_log_</find>
       <find>full_seq_probs</find>
+      <find>init_mcmc</find>
+      <find>f.</find>
+      <find>log_prob_init</find>
+      <find>empirical_counts</find>
+      <find>bkwd_algorithm</find>
+      <find>fwd_algorithm</find>
+      <find>log_prob_</find>
     </findStrings>
     <replaceStrings>
       <replace>a_log</replace>
@@ -80,18 +99,20 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$USER_HOME$/OneDrive/Berkeley Biophysics/projects/cpHMM/src/HMMBasic.py" />
-        <option value="$PROJECT_DIR$/src/traceDecoderTesting.ipynb" />
         <option value="$PROJECT_DIR$/src/.ipynb_checkpoints/trace_simulators.py" />
-        <option value="$PROJECT_DIR$/src/functions.py" />
         <option value="$PROJECT_DIR$/src/trace_simulators.py" />
+        <option value="$PROJECT_DIR$/src/mcmc_scripts.py" />
+        <option value="$PROJECT_DIR$/src/functions.py" />
+        <option value="$PROJECT_DIR$/src/traceDecoderTesting.ipynb" />
+        <option value="$PROJECT_DIR$/src/init_mcmc_two_state.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="-12" />
+    <option name="x" value="2350" />
     <option name="y" value="-12" />
-    <option name="width" value="1944" />
-    <option name="height" value="1104" />
+    <option name="width" value="1296" />
+    <option name="height" value="736" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -99,6 +120,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -121,12 +143,11 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="last_opened_file_path" value="$USER_HOME$/OneDrive/Berkeley Biophysics/projects/cpHMM/src/HMMBasic.py" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -145,7 +166,24 @@
       </list>
     </option>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Jupyter Notebook.network_decoder">
+    <configuration name="network_decoder" type="JupiterNotebook" factoryName="Jupyter Notebook">
+      <module name="network_decoder" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="additionalOptions" value="" />
+      <option name="ipnbHost" value="127.0.0.1" />
+      <option name="ipnbPort" value="8888" />
+      <method v="2" />
+    </configuration>
     <configuration name="Unnamed" type="PythonConfigurationType" factoryName="Python">
       <module name="network_decoder" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -158,7 +196,7 @@
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/functions.py" />
+      <option name="SCRIPT_NAME" value="C:\Users\nlamm\projects\network_decoder\src\init_mcmc_multi_state.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -182,21 +220,21 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-7" y="-7" width="1295" height="735" extended-state="6" />
+    <frame x="1912" y="-8" width="1936" height="1096" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.4976744" visible="true" weight="0.18600954" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.4976744" visible="true" weight="0.12328767" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" sideWeight="0.5023256" side_tool="true" weight="0.2472178" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.3217247" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.32087228" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.28689885" />
-      <window_info anchor="bottom" id="Python Console" order="8" visible="true" weight="0.18739635" />
+      <window_info anchor="bottom" id="Python Console" order="8" weight="0.17549326" />
       <window_info anchor="bottom" id="Version Control" order="9" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
@@ -207,27 +245,37 @@
   <component name="editorHistoryManager">
     <entry file="file://$USER_HOME$/OneDrive/Berkeley Biophysics/projects/transcription_kinetics/src/utilities/functions.py" />
     <entry file="file://$USER_HOME$/OneDrive/Berkeley Biophysics/projects/cpHMM/src/HMMBasic.py" />
-    <entry file="file://$PROJECT_DIR$/src/traceDecoderTesting.ipynb">
-      <provider selected="true" editor-type-id="ipnb-editor">
-        <state>
-          <selected id="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/functions.py">
+    <entry file="file://$PROJECT_DIR$/src/init_mcmc_multi_state.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
+        <state>
+          <caret line="32" selection-start-line="32" selection-end-line="32" />
           <folding>
             <element signature="e#0#13#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/traceDecoderTesting.ipynb">
+      <provider selected="true" editor-type-id="ipnb-editor">
+        <state>
+          <selected id="1" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/trace_simulators.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="34">
-          <caret line="72" lean-forward="true" selection-start-line="72" selection-end-line="72" />
+        <state relative-caret-position="1600">
+          <caret line="80" column="55" lean-forward="true" selection-start-line="80" selection-start-column="55" selection-end-line="80" selection-end-column="55" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/init_mcmc_two_state.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="395">
+          <caret line="260" column="34" lean-forward="true" selection-start-line="260" selection-start-column="34" selection-end-line="260" selection-end-column="34" />
           <folding>
             <element signature="e#0#13#0" expanded="true" />
           </folding>

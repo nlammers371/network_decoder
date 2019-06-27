@@ -72,11 +72,11 @@ def simulate_traces(tau,dT,memory,trace_len,A,e,r,sigma,alpha):
     return fluo_noise, fluo_raw, fluo_unif, system_states, initiation_states
 
 
-def simulate_initiation_states(trace_len, A, p):
+def simulate_initiation_states(trace_len, A, p_vec):
     """
     :param trace_len: number of time steps in trace
     :param A: transition probability matrix (KxK)
-    :param p: initiation probability vector (Kx1)
+    :param p_vec: initiation probability vector (Kx1)
     :return: system_states: 1xT integer vector (K possible values) indicating kinetic state of system at each time step
              initiation_states: 1xT  binary vector indicating presence or absence of initiation event
     """
@@ -90,12 +90,12 @@ def simulate_initiation_states(trace_len, A, p):
     # draw first system state
     system_states[0] = np.random.choice(K)
     # draw initiation state conditional on system state
-    initiation_states[0] = np.random.choice(range(1), 1, p=[1-p[system_states[0]], p[system_states[0]]])
+    initiation_states[0] = np.random.choice([0, 1], 1, p=[1-p_vec[system_states[0]], p_vec[system_states[0]]])
 
     for i in range(1, trace_len):
         # time step
         system_states[i] = np.random.choice(K, 1, p=A[:, system_states[i-1]])
-        initiation_states[i] = np.random.choice(range(1), 1, p=[1-p[system_states[0]], p[system_states[0]]])
+        initiation_states[i] = np.random.choice([0, 1], 1, p=[1-p_vec[system_states[i]], p_vec[system_states[i]]])
 
     # output
     return system_states, initiation_states
