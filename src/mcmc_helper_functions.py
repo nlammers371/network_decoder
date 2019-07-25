@@ -7,8 +7,10 @@ import sys
 import scipy  # various algorithms
 from scipy.stats import truncnorm
 from matplotlib import pyplot as plt
-import math
+from scipy.special import factorial
 from scipy.stats import dirichlet
+from scipy.stats import poisson
+
 from scipy.stats import multinomial
 from sklearn.preprocessing import normalize
 
@@ -30,11 +32,11 @@ def log_L_fluo(fluo, v, state, noise):
 
 # @jit
 # forward filtering pass
-def fwd_algorithm(init_vec, a_log, e_log, pi0_log):
+def fwd_algorithm(init_vec, a_log, lambda_vec, pi0_log):
     """
     :param init_vec: a single time series of initiation event counts
     :param a_log: current estimate of transition probability matrix (KxK)
-    :param e_log: current estimate of initiation probability matrix (KxK)
+    :param lambda_vec: current estimate of (Poisson) initiation rates (1xK)
     :param pi0_log: initial state PDF (1xK)
     :return: K x T vector of  log probabilities
     """
@@ -45,19 +47,19 @@ def fwd_algorithm(init_vec, a_log, e_log, pi0_log):
     alpha_array = np.zeros((K, T), dtype=float) - np.Inf
     # Iterate through time points
     prev = np.tile(pi0_log, (K, 1))
-    prev_time = 0
     for t in range(0, T):
-        alpha_array[:, t] = np.logaddexp.reduce(a_log + prev, axis=1) + e_log[int(init_vec[t]), :]
+        init_long = np.tile(init_vec[t], (1, K))
+        lambda_log = -lambda_vec + np.multiply(init_long, np.log(lambda_vec)) - np.log(factorial(init_long))
+        alpha_array[:, t] = np.logaddexp.reduce(a_log + prev, axis=1) + lambda_log
         prev = np.tile(alpha_array[:, t], (K, 1))
-
     return alpha_array
 
 # @jit
-def bkwd_algorithm(init_vec, a_log, e_log, pi0_log):
+def bkwd_algorithm(init_vec, a_log, lambda_vec, pi0_log):
     """
     :param init_vec: a single time series of initiation event counts
     :param a_log: current estimate of transition probability matrix (KxK)
-    :param e_log: current estimate of initiation probability matrix (KxK)
+    :param lambda_vec: current estimate of (Poisson) initiation rates (1xK)
     :param pi0_log: initial state PDF (Kx1)
     :return: K x T vector of  log probabilities
     """
@@ -72,10 +74,14 @@ def bkwd_algorithm(init_vec, a_log, e_log, pi0_log):
     # Reverse direction
     steps = steps[::-1]
     for t in steps:
-        post = np.transpose(np.tile(beta_array[:, t + 1] + e_log[int(init_vec[t + 1]), :], (K, 1)))
+        init_long = np.tile(init_vec[t+1], K)
+        lambda_log = -lambda_vec + np.multiply(init_long, np.log(lambda_vec)) - np.log(factorial(init_long))
+        post = np.transpose(np.tile(beta_array[:, t + 1] + np.transpose(lambda_log), (K, 1)))
         b_sums = post + a_log
         beta_array[:, t] = np.logaddexp.reduce(b_sums, axis=0)
-    close_probs = [beta_array[l, 0] + pi0_log[l] + e_log[int(init_vec[0]), l] for l in range(K)]
+    # calculate close probs
+    lambda_log = [np.log(poisson.pmf(init_vec[0], mu=lb)) for lb in lambda_vec]
+    close_probs = [beta_array[l, 0] + pi0_log[l] + np.log(poisson.pmf(init_vec[0], mu=lambda_vec[l])) for l in range(K)]
     return beta_array, np.logaddexp.reduce(close_probs)
 
 def particle_filter(init_vec, a_mat, e_mat, pi0_vec, n_particles):
@@ -133,15 +139,15 @@ def dirichlet_prob(alpha_matrix, p_matrix):
 
 
 # function to calculate the probability of a parameter set given priors and data
-def log_prob_init(init_data, a_mat, e_mat, pi0_vec, a_prior, e_prior, pi0_prior):
+def log_prob_init(init_data, a_mat, lambda_vec, pi0_vec, a_prior, e_prior, pi0_prior):
     """
     :param init_data: list of lists. Each element is integer-valued time series indicating
             number of initiation events. Must be in [0, 1, 2]
     :param a_mat: current estimate for transition prob matrix (KxK)
-    :param e_mat: current estimate for emission prob matrix (3xK)
+    :param lambda_vec: current estimate for emission rates (1xK)
     :param pi0_vec: initial state PDF
     :param a_prior: matrix containing hyperparameters for transition prob prior (KxK)
-    :param e_prior: matrix containing hyperparameters for emission prob prior 3xK)
+    :param lambda_prior: matrix containing hyperparameters for emission prob prior 3xK)
     :param pi0_prior: vector containing hyperparameters for initial state prob prior 1xK)
     :return: "total_prob": total probability of sequence, "fwd_list": list of forward matrices
     """
@@ -149,7 +155,7 @@ def log_prob_init(init_data, a_mat, e_mat, pi0_vec, a_prior, e_prior, pi0_prior)
     init_probs = []
     fwd_list = []
     for i, init_vec in enumerate(init_data):
-        fwd_matrix = fwd_algorithm(init_vec, np.log(a_mat), np.log(e_mat), np.log(pi0_vec))
+        fwd_matrix = fwd_algorithm(init_vec, np.log(a_mat), lambda_vec, np.log(pi0_vec))
         fwd_list.append(fwd_matrix)
         init_probs.append(np.logaddexp.reduce(fwd_matrix[:, -1]))
     init_prob_total = np.sum(init_probs)
@@ -158,11 +164,11 @@ def log_prob_init(init_data, a_mat, e_mat, pi0_vec, a_prior, e_prior, pi0_prior)
     return total_prob, fwd_list
 
 
-def empirical_counts(a_log, e_log, pi0_log, init_data, alpha_list, beta_list):
+def empirical_counts(a_log, lambda_vec, pi0_log, init_data, alpha_list, beta_list):
     """
     Returns counts of emission and transition events
     :param a_log: Float array (KxK). Log of current estimate of transition matrix
-    :param e_log: Float array (3xK). Log of current estimate for emission matrix
+    :param lambda_vec: Float vec (1xK). current estimate for Poisson initiation rates
     :param pi0_log: Float array (1xK). Log of current estimate for inital state PDF
     :param init_data: List of lists. Each item is a time series of initiation events
     :param alpha_list: List of lists. Each element is array of fwd probabilities
@@ -173,6 +179,7 @@ def empirical_counts(a_log, e_log, pi0_log, init_data, alpha_list, beta_list):
     # Calculate total marginal probability for each z_it
     seq_log_probs = []
     full_seq_probs = []
+    visit_counts = np.zeros((1, len(pi0_log)))
     for t in range(len(init_data)):
         alpha_array = alpha_list[t]
         beta_array = beta_list[t]
@@ -180,10 +187,11 @@ def empirical_counts(a_log, e_log, pi0_log, init_data, alpha_list, beta_list):
         seq_probs = alpha_array + beta_array
         seq_probs = seq_probs - np.logaddexp.reduce(seq_probs, axis=0)
         full_seq_probs.append(seq_probs)
-
+        # calculate total visits per state
+        visit_counts += np.sum(np.exp(seq_probs), axis=1)
     # Now calculate effective number of transitions (empirical transition matrix)
     a_log_empirical = np.zeros_like(a_log) - np.Inf
-    K = len(e_log[:, 0])
+    K = len(lambda_vec)
     # transition counts
     for k in range(K):
         for l in range(K):
@@ -191,24 +199,26 @@ def empirical_counts(a_log, e_log, pi0_log, init_data, alpha_list, beta_list):
             a_probs = []
             # current transition prob from k to l
             akl = a_log[l, k]
+            e_rate = lambda_vec[l]
             for i, init_vec in enumerate(init_data):
                 T = len(init_vec)
                 a = alpha_list[i]
                 b = beta_list[i]
-                event_list = [a[k, t] + b[l, t + 1] + akl + e_log[int(init_vec[t + 1]), l] for t in range(T - 1)]
+                event_list = [a[k, t] + b[l, t + 1] + akl + -e_rate + np.multiply(init_vec[t + 1], np.log(e_rate)) -
+                              np.log(factorial(init_vec[t + 1])) for t in range(T - 1)]
                 a_probs.append(np.logaddexp.reduce(event_list) - seq_log_probs[i])  # NL: why do this?
 
             a_log_empirical[l, k] = np.logaddexp.reduce(a_probs)
 
-    e_empirical = np.zeros_like(e_log)
+    lambda_counts = np.zeros_like(lambda_vec)
     for i, init_vec in enumerate(init_data):
         seq_probs = np.exp(full_seq_probs[i])
         for t in range(len(init_vec)):
-            e_empirical[int(init_vec[t]), :] += seq_probs[:, t]
+            lambda_counts += seq_probs[:, t]*init_vec[t]
 
     pi0_log_empirical = np.zeros_like(pi0_log)
     for i, init_vec in enumerate(init_data):
         seq_probs = full_seq_probs[i]
         pi0_log_empirical += seq_probs[:, 0]
 
-    return a_log_empirical, np.log(e_empirical), pi0_log_empirical, seq_log_probs, full_seq_probs
+    return np.exp(a_log_empirical), lambda_counts, np.exp(pi0_log_empirical), seq_log_probs, full_seq_probs, visit_counts[0]
